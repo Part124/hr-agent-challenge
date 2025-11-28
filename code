@@ -1,0 +1,35 @@
+import openai
+import gradio as gr
+
+openai.api_key = "YOUR_API_KEY"  # Your key here!
+
+# Fake HR FAQs (expand with 5-10 real ones if time)
+faqs = [
+    {"q": "leave policy", "a": "15 days PTO/year. Apply via portal."},
+    {"q": "benefits", "a": "80% health coverage. Enroll in month 1."},
+    {"q": "remote work", "a": "3 days/week max. Get approval."},
+    {"q": "salary date", "a": "Paid last Friday/month."},
+    {"q": "vacation", "a": "Unlimited casual leaves, up to 5."}
+]
+
+def match_faq(query):
+    query_lower = query.lower()
+    for faq in faqs:
+        if faq["q"] in query_lower:
+            return faq["a"]
+    return "Escalate to HR for details."
+
+def hr_chat(message, history):
+    base_resp = match_faq(message)
+    # Use GPT to make it conversational
+    resp = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "system", "content": "You are HR Assistant. Short, helpful answers."},
+                  {"role": "user", "content": f"Query: {message}. FAQ: {base_resp}"}]
+    ).choices[0].message.content
+    history.append((message, resp))
+    return history, history
+
+# Simple UI
+demo = gr.ChatInterface(hr_chat, title="HR Assistant Bot")
+demo.launch(share=True)  # Gets public link!
